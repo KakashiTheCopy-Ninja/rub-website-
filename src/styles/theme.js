@@ -1,17 +1,17 @@
-// src/styles/theme.js - Copy this entire file to your project
+// src/styles/theme.js - Updated with blue color scheme
 const theme = {
   colors: {
-    primary: '#2B5D41',
-    primaryDark: '#1B4332',
-    secondary: '#F4D03F',
-    accent: '#E8B923',
-    background: '#F8F9FA',
+    primary: '#1E40AF',        // Deep Blue (was #2B5D41 green)
+    primaryDark: '#1E3A8A',    // Darker Blue (was #1B4332 green)
+    secondary: '#06B6D4',      // Teal for harmonious blue family palette
+    accent: '#0891B2',         // Darker teal for hover states and emphasis
+    background: '#F8FAFC',     // Light blue-gray background
     white: '#FFFFFF',
-    textPrimary: '#2B5D41',
-    textSecondary: '#5A6B5D',
-    textLight: '#7A8B7D',
-    border: '#E5E7EB',
-    success: '#10B981',
+    textPrimary: '#1E40AF',    // Blue text instead of green
+    textSecondary: '#475569',  // Blue-gray secondary text
+    textLight: '#64748B',      // Lighter blue-gray
+    border: '#E2E8F0',         // Light blue-gray border
+    success: '#10B981',        // Keep green for success
     warning: '#F59E0B',
     error: '#EF4444'
   },
