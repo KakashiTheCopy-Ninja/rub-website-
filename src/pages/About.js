@@ -242,16 +242,11 @@ const TeamSection = styled.section`
 
 const TeamGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: ${props => props.theme.spacing.xl};
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    grid-template-columns: 1fr;
-  }
+  justify-items: center;
+  max-width: 540px;
+  margin: 0 auto;
 `;
 
 const TeamCard = styled(motion.div)`
@@ -394,19 +389,9 @@ const About = () => {
 
   const teamMembers = [
     {
-      name: "Rizwan Ahmad",
-      position: "Chief Executive Officer",
-      description: "Leading the company vision with 20+ years of industry experience and strategic partnerships."
-    },
-    {
-      name: "Usman Billal",
-      position: "Technical Director",
-      description: "Expert in poultry equipment installation and technical support services across Pakistan."
-    },
-    {
-      name: "Bilal Sheikh",
-      position: "Operations Manager",
-      description: "Managing day-to-day operations and ensuring quality delivery of products and services."
+      name: "Bilal Shukat",
+      position: "Founder and CEO",
+      description: "Founder and CEO leading R.U.B Associates with vision and integrity."
     }
   ];
 
@@ -584,7 +569,7 @@ const About = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            Leadership Team
+            Founder and CEO
           </SectionTitle>
 
           <TeamGrid>

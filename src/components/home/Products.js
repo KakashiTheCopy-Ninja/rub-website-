@@ -280,10 +280,10 @@ const Products = () => {
 
   const partners = [
     { company: "CHORE TIME", country: "USA" },
-    { company: "HIRED HAND", country: "USA" },
+    { company: "POULTEC", country: "Belgium" },
     { company: "HUTEK ASIA", country: "Thailand" },
     { company: "MUYANG GROUP", country: "China" },
-    { company: "PERICOLI", country: "Italy" },
+    { company: "FRICH INTERNATIONAL", country: "China" },
     { company: "PRISTINE DYNAMICS", country: "Malaysia" },
     { company: "AGROMEAL", country: "USA" },
     { company: "TGL EUROGUY", country: "Europe" },
