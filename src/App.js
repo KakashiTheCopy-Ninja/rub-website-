@@ -14,6 +14,8 @@ import About from './pages/About';
 import Products from './pages/Products';
 import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
+import AdminRoutes from './components/admin/AdminRoutes';
+import { AdminProvider } from './components/context/AdminContext';
 
 // Styles
 import GlobalStyles from './styles/GlobalStyles';
@@ -33,21 +35,33 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
-      <Router>
-        <div className="App">
-          <Header />
-          <main>
+      <AdminProvider>
+        <Router>
+          <div className="App">
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/contact" element={<Contact />} />
+              {/* Admin Routes */}
+              <Route path="/admin/*" element={<AdminRoutes />} />
+              
+              {/* Public Routes */}
+              <Route path="/*" element={
+                <>
+                  <Header />
+                  <main>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/gallery" element={<Gallery />} />
+                      <Route path="/contact" element={<Contact />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
+              } />
             </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+          </div>
+        </Router>
+      </AdminProvider>
     </ThemeProvider>
   );
 }

@@ -1,5 +1,6 @@
 // src/context/AdminContext.js
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import apiService from '../../services/api';
 
 const AdminContext = createContext();
 
@@ -8,96 +9,12 @@ const initialState = {
   isAuthenticated: false,
   user: null,
   products: [],
-  categories: [
-    { id: 1, name: 'Feeding & Drinking Systems', slug: 'feeding-drinking' },
-    { id: 2, name: 'Ventilation Equipment', slug: 'ventilation' },
-    { id: 3, name: 'Feed Additives', slug: 'feed-additives' },
-    { id: 4, name: 'Cooling Systems', slug: 'cooling' },
-    { id: 5, name: 'Control Systems', slug: 'control' }
-  ],
-  partners: [
-    { id: 1, company: "CHORE TIME", country: "USA" },
-    { id: 2, company: "HIRED HAND", country: "USA" },
-    { id: 3, company: "HUTEK ASIA", country: "Thailand" },
-    { id: 4, company: "MUYANG GROUP", country: "China" },
-    { id: 5, company: "PERICOLI", country: "Italy" }
-  ],
+  categories: [],
+  gallery: [],
   loading: false,
   error: null
 };
 
-// Sample products data
-const sampleProducts = [
-  {
-    id: 1,
-    name: "China Feeding System",
-    description: "Complete automated feeding system with precision control for optimal feed distribution.",
-    category: "feeding-drinking",
-    price: 15000,
-    image: "/assets/images/china-feeding-system.jpg",
-    specifications: {
-      capacity: "500-1000 birds",
-      material: "Galvanized Steel",
-      power: "220V",
-      warranty: "2 years"
-    },
-    features: [
-      "Automated feed distribution",
-      "Adjustable feeding schedules",
-      "Low maintenance design",
-      "Easy installation"
-    ],
-    inStock: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 2,
-    name: "Exhaust Fan 42\"",
-    description: "High-efficiency exhaust fan for optimal poultry house ventilation and air circulation.",
-    category: "ventilation",
-    price: 850,
-    image: "/assets/images/exhaust-fan-42.jpg",
-    specifications: {
-      diameter: "42 inches",
-      airflow: "18000 CFM",
-      power: "1.5 HP",
-      material: "Aluminum blades"
-    },
-    features: [
-      "High airflow capacity",
-      "Energy efficient motor",
-      "Weather resistant",
-      "Low noise operation"
-    ],
-    inStock: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 3,
-    name: "Vitamin & Mineral Premix",
-    description: "Complete nutritional supplement providing essential vitamins and minerals for poultry health.",
-    category: "feed-additives",
-    price: 45,
-    image: "/assets/images/vitamin-mineral-premix.jpg",
-    specifications: {
-      weight: "25 kg bag",
-      shelf_life: "24 months",
-      dosage: "2.5 kg per ton of feed",
-      storage: "Cool, dry place"
-    },
-    features: [
-      "Essential vitamins A, D, E, K",
-      "Trace minerals included",
-      "Improves egg production",
-      "Enhances immunity"
-    ],
-    inStock: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
 
 // Action types
 const ACTIONS = {
@@ -109,9 +26,11 @@ const ACTIONS = {
   ADD_PRODUCT: 'ADD_PRODUCT',
   UPDATE_PRODUCT: 'UPDATE_PRODUCT',
   DELETE_PRODUCT: 'DELETE_PRODUCT',
-  ADD_CATEGORY: 'ADD_CATEGORY',
-  UPDATE_CATEGORY: 'UPDATE_CATEGORY',
-  DELETE_CATEGORY: 'DELETE_CATEGORY'
+  LOAD_CATEGORIES: 'LOAD_CATEGORIES',
+  LOAD_GALLERY: 'LOAD_GALLERY',
+  ADD_GALLERY_ITEM: 'ADD_GALLERY_ITEM',
+  UPDATE_GALLERY_ITEM: 'UPDATE_GALLERY_ITEM',
+  DELETE_GALLERY_ITEM: 'DELETE_GALLERY_ITEM'
 };
 
 // Reducer
@@ -171,28 +90,45 @@ const adminReducer = (state, action) => {
     case ACTIONS.DELETE_PRODUCT:
       return {
         ...state,
-        products: state.products.filter(product => product.id !== action.payload),
+        products: state.products.filter(product => product._id !== action.payload),
         loading: false
       };
     
-    case ACTIONS.ADD_CATEGORY:
+    case ACTIONS.LOAD_CATEGORIES:
       return {
         ...state,
-        categories: [...state.categories, action.payload]
+        categories: action.payload,
+        loading: false
       };
     
-    case ACTIONS.UPDATE_CATEGORY:
+    case ACTIONS.LOAD_GALLERY:
       return {
         ...state,
-        categories: state.categories.map(category => 
-          category.id === action.payload.id ? action.payload : category
-        )
+        gallery: action.payload,
+        loading: false
       };
     
-    case ACTIONS.DELETE_CATEGORY:
+    case ACTIONS.ADD_GALLERY_ITEM:
       return {
         ...state,
-        categories: state.categories.filter(category => category.id !== action.payload)
+        gallery: [...state.gallery, action.payload],
+        loading: false
+      };
+    
+    case ACTIONS.UPDATE_GALLERY_ITEM:
+      return {
+        ...state,
+        gallery: state.gallery.map(item => 
+          item._id === action.payload._id ? action.payload : item
+        ),
+        loading: false
+      };
+    
+    case ACTIONS.DELETE_GALLERY_ITEM:
+      return {
+        ...state,
+        gallery: state.gallery.filter(item => item._id !== action.payload),
+        loading: false
       };
     
     default:
@@ -206,52 +142,56 @@ export const AdminProvider = ({ children }) => {
 
   // Load initial data
   useEffect(() => {
-    const savedAuth = localStorage.getItem('adminAuth');
-    const savedProducts = localStorage.getItem('adminProducts');
-    
-    if (savedAuth) {
-      const authData = JSON.parse(savedAuth);
-      dispatch({ type: ACTIONS.LOGIN_SUCCESS, payload: authData });
-    }
-    
-    if (savedProducts) {
-      const products = JSON.parse(savedProducts);
-      dispatch({ type: ACTIONS.LOAD_PRODUCTS, payload: products });
-    } else {
-      // Load sample data if no saved products
-      dispatch({ type: ACTIONS.LOAD_PRODUCTS, payload: sampleProducts });
-      localStorage.setItem('adminProducts', JSON.stringify(sampleProducts));
-    }
+    checkAuthStatus();
   }, []);
 
-  // Save products to localStorage whenever products change
-  useEffect(() => {
-    if (state.products.length > 0) {
-      localStorage.setItem('adminProducts', JSON.stringify(state.products));
+  const checkAuthStatus = async () => {
+    const token = apiService.getAuthToken();
+    if (token) {
+      try {
+        dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+        const userData = await apiService.getCurrentUser();
+        dispatch({ type: ACTIONS.LOGIN_SUCCESS, payload: userData.user });
+        await loadInitialData();
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        apiService.removeAuthToken();
+        dispatch({ type: ACTIONS.SET_ERROR, payload: 'Session expired' });
+      }
     }
-  }, [state.products]);
+    dispatch({ type: ACTIONS.SET_LOADING, payload: false });
+  };
+
+  const loadInitialData = async () => {
+    try {
+      const [productsData, categoriesData, galleryData] = await Promise.all([
+        apiService.getProducts(),
+        apiService.getCategories(),
+        apiService.getGallery()
+      ]);
+      
+      dispatch({ type: ACTIONS.LOAD_PRODUCTS, payload: productsData.products || [] });
+      dispatch({ type: ACTIONS.LOAD_CATEGORIES, payload: categoriesData.categories || [] });
+      dispatch({ type: ACTIONS.LOAD_GALLERY, payload: galleryData.gallery || [] });
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to load data' });
+    }
+  };
 
   // Admin actions
   const login = async (credentials) => {
     dispatch({ type: ACTIONS.SET_LOADING, payload: true });
     
     try {
-      // Simple authentication (in real app, this would be an API call)
-      if (credentials.username === 'admin' && credentials.password === 'admin123') {
-        const user = {
-          id: 1,
-          username: 'admin',
-          email: 'admin@rub.com',
-          role: 'admin',
-          name: 'R.U.B Admin'
-        };
-        
-        localStorage.setItem('adminAuth', JSON.stringify(user));
-        dispatch({ type: ACTIONS.LOGIN_SUCCESS, payload: user });
-        return { success: true };
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      const loginData = await apiService.login({
+        email: credentials.username, // Using username as email
+        password: credentials.password
+      });
+      
+      dispatch({ type: ACTIONS.LOGIN_SUCCESS, payload: loginData.user });
+      await loadInitialData();
+      return { success: true };
     } catch (error) {
       dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
       return { success: false, error: error.message };
@@ -259,52 +199,78 @@ export const AdminProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('adminAuth');
+    apiService.removeAuthToken();
     dispatch({ type: ACTIONS.LOGOUT });
   };
 
-  const addProduct = (productData) => {
-    const newProduct = {
-      ...productData,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: ACTIONS.ADD_PRODUCT, payload: newProduct });
-    return newProduct;
+  const addProduct = async (productData) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      const result = await apiService.createProduct(productData);
+      dispatch({ type: ACTIONS.ADD_PRODUCT, payload: result.product });
+      return result.product;
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
-  const updateProduct = (id, productData) => {
-    const updatedProduct = {
-      ...productData,
-      id,
-      updatedAt: new Date().toISOString()
-    };
-    dispatch({ type: ACTIONS.UPDATE_PRODUCT, payload: updatedProduct });
-    return updatedProduct;
+  const updateProduct = async (id, productData) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      const result = await apiService.updateProduct(id, productData);
+      dispatch({ type: ACTIONS.UPDATE_PRODUCT, payload: result.product });
+      return result.product;
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
-  const deleteProduct = (id) => {
-    dispatch({ type: ACTIONS.DELETE_PRODUCT, payload: id });
+  const deleteProduct = async (id) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      await apiService.deleteProduct(id);
+      dispatch({ type: ACTIONS.DELETE_PRODUCT, payload: id });
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
-  const addCategory = (categoryData) => {
-    const newCategory = {
-      ...categoryData,
-      id: Date.now()
-    };
-    dispatch({ type: ACTIONS.ADD_CATEGORY, payload: newCategory });
-    return newCategory;
+  const addGalleryItem = async (galleryData) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      const result = await apiService.createGalleryItem(galleryData);
+      dispatch({ type: ACTIONS.ADD_GALLERY_ITEM, payload: result.galleryItem });
+      return result.galleryItem;
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
-  const updateCategory = (id, categoryData) => {
-    const updatedCategory = { ...categoryData, id };
-    dispatch({ type: ACTIONS.UPDATE_CATEGORY, payload: updatedCategory });
-    return updatedCategory;
+  const updateGalleryItem = async (id, galleryData) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      const result = await apiService.updateGalleryItem(id, galleryData);
+      dispatch({ type: ACTIONS.UPDATE_GALLERY_ITEM, payload: result.galleryItem });
+      return result.galleryItem;
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
-  const deleteCategory = (id) => {
-    dispatch({ type: ACTIONS.DELETE_CATEGORY, payload: id });
+  const deleteGalleryItem = async (id) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+      await apiService.deleteGalleryItem(id);
+      dispatch({ type: ACTIONS.DELETE_GALLERY_ITEM, payload: id });
+    } catch (error) {
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
+      throw error;
+    }
   };
 
   const value = {
@@ -314,9 +280,9 @@ export const AdminProvider = ({ children }) => {
     addProduct,
     updateProduct,
     deleteProduct,
-    addCategory,
-    updateCategory,
-    deleteCategory
+    addGalleryItem,
+    updateGalleryItem,
+    deleteGalleryItem
   };
 
   return (
