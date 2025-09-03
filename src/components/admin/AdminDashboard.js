@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   FiGrid, 
   FiPackage, 
-  FiImage,
+  FiUsers, 
   FiSettings, 
   FiLogOut,
   FiPlus,
@@ -15,29 +15,20 @@ import {
 } from 'react-icons/fi';
 import { useAdmin } from '../../context/AdminContext';
 import ProductForm from './ProductForm';
-import GalleryForm from './GalleryForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const { 
     user, 
     products, 
-    categories,
-    gallery,
+    categories, 
     logout, 
-    deleteProduct,
-    addProduct,
-    updateProduct,
-    addGalleryItem,
-    updateGalleryItem,
-    deleteGalleryItem
+    deleteProduct 
   } = useAdmin();
   
   const [activeTab, setActiveTab] = useState('overview');
   const [showProductForm, setShowProductForm] = useState(false);
-  const [showGalleryForm, setShowGalleryForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [editingGalleryItem, setEditingGalleryItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -55,73 +46,22 @@ const AdminDashboard = () => {
     setShowProductForm(true);
   };
 
-  const handleAddGalleryItem = () => {
-    setEditingGalleryItem(null);
-    setShowGalleryForm(true);
-  };
-
-  const handleEditGalleryItem = (item) => {
-    setEditingGalleryItem(item);
-    setShowGalleryForm(true);
-  };
-
-  const handleDeleteProduct = async (productId) => {
+  const handleDeleteProduct = (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await deleteProduct(productId);
-      } catch (error) {
-        alert('Error deleting product: ' + error.message);
-      }
+      deleteProduct(productId);
     }
   };
 
-  const handleDeleteGalleryItem = async (itemId) => {
-    if (window.confirm('Are you sure you want to delete this gallery item?')) {
-      try {
-        await deleteGalleryItem(itemId);
-      } catch (error) {
-        alert('Error deleting gallery item: ' + error.message);
-      }
-    }
-  };
-
-  const handleSaveProduct = async (productData) => {
-    try {
-      if (editingProduct) {
-        await updateProduct(editingProduct._id, productData);
-      } else {
-        await addProduct(productData);
-      }
-    } catch (error) {
-      console.error('Error saving product:', error);
-      throw error;
-    }
-  };
-
-  const handleSaveGalleryItem = async (galleryData) => {
-    try {
-      if (editingGalleryItem) {
-        await updateGalleryItem(editingGalleryItem._id, galleryData);
-      } else {
-        await addGalleryItem(galleryData);
-      }
-    } catch (error) {
-      console.error('Error saving gallery item:', error);
-      throw error;
-    }
-  };
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || 
-                           (product.category && product.category.slug === selectedCategory);
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const stats = {
     totalProducts: products.length,
     totalCategories: categories.length,
-    totalGalleryItems: gallery.length,
     inStockProducts: products.filter(p => p.inStock).length,
     outOfStockProducts: products.filter(p => !p.inStock).length
   };
@@ -145,12 +85,12 @@ const AdminDashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#10B98115' }}>
-            <FiImage size={24} style={{ color: '#10B981' }} />
+          <div className="stat-icon" style={{ backgroundColor: '#06B6D415' }}>
+            <FiGrid size={24} style={{ color: '#06B6D4' }} />
           </div>
           <div className="stat-info">
-            <h3>{stats.totalGalleryItems}</h3>
-            <p>Gallery Items</p>
+            <h3>{stats.totalCategories}</h3>
+            <p>Categories</p>
           </div>
         </div>
 
@@ -176,25 +116,21 @@ const AdminDashboard = () => {
       </div>
 
       <div className="recent-products">
-        <h3>Recent Items</h3>
+        <h3>Recent Products</h3>
         <div className="product-list">
-          {[...products, ...gallery].slice(-5).map(item => (
-            <div key={item._id} className="product-item">
+          {products.slice(-5).map(product => (
+            <div key={product.id} className="product-item">
               <div className="product-image">
-                <img 
-                  src={item.images?.[0]?.url || item.media?.[0]?.url || '/assets/images/product-placeholder.jpg'} 
-                  alt={item.name || item.title} 
-                />
+                <img src={product.image || '/assets/images/product-placeholder.jpg'} alt={product.name} />
               </div>
               <div className="product-info">
-                <h4>{item.name || item.title}</h4>
-                <p>{item.description.substring(0, 100)}...</p>
-                {item.price && <span className="product-price">${item.price}</span>}
+                <h4>{product.name}</h4>
+                <p>{product.description.substring(0, 100)}...</p>
+                <span className="product-price">${product.price}</span>
               </div>
               <div className="product-status">
-                <span className={`status-badge ${item.inStock !== false ? 'in-stock' : 'out-of-stock'}`}>
-                  {item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : 
-                   (item.inStock ? 'In Stock' : 'Out of Stock')}
+                <span className={`status-badge ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                  {product.inStock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
             </div>
@@ -235,7 +171,7 @@ const AdminDashboard = () => {
           >
             <option value="all">All Categories</option>
             {categories.map(category => (
-              <option key={category._id} value={category.slug}>
+              <option key={category.id} value={category.slug}>
                 {category.name}
               </option>
             ))}
@@ -245,10 +181,10 @@ const AdminDashboard = () => {
 
       <div className="products-grid">
         {filteredProducts.map(product => (
-          <div key={product._id} className="product-card">
+          <div key={product.id} className="product-card">
             <div className="product-image">
               <img 
-                src={product.images?.[0]?.url || '/assets/images/product-placeholder.jpg'} 
+                src={product.image || '/assets/images/product-placeholder.jpg'} 
                 alt={product.name}
                 onError={(e) => {
                   e.target.src = '/assets/images/product-placeholder.jpg';
@@ -264,13 +200,13 @@ const AdminDashboard = () => {
               
               <div className="product-meta">
                 <span className="product-price">${product.price}</span>
-                <span className={`status-badge ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                <span className={`product-status ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
                   {product.inStock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
               
               <div className="product-category">
-                {product.category?.name || 'Uncategorized'}
+                {categories.find(cat => cat.slug === product.category)?.name || product.category}
               </div>
             </div>
 
@@ -290,7 +226,7 @@ const AdminDashboard = () => {
               </button>
               <button 
                 className="action-btn delete-btn"
-                onClick={() => handleDeleteProduct(product._id)}
+                onClick={() => handleDeleteProduct(product.id)}
                 title="Delete Product"
               >
                 <FiTrash2 size={16} />
@@ -342,11 +278,11 @@ const AdminDashboard = () => {
           </button>
           
           <button
-            className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`}
-            onClick={() => setActiveTab('gallery')}
+            className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+            onClick={() => setActiveTab('categories')}
           >
-            <FiImage size={20} />
-            <span>Gallery</span>
+            <FiGrid size={20} />
+            <span>Categories</span>
           </button>
           
           <button
@@ -392,29 +328,19 @@ const AdminDashboard = () => {
         <div className="main-content">
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'products' && renderProducts()}
-          {activeTab === 'gallery' && renderGallery()}
+          {activeTab === 'categories' && <div>Categories Management (Coming Soon)</div>}
+          }
           {activeTab === 'settings' && <div>Settings (Coming Soon)</div>}
+          }
         </div>
       </div>
 
       {showProductForm && (
         <ProductForm
           product={editingProduct}
-          onSave={handleSaveProduct}
           onClose={() => {
             setShowProductForm(false);
             setEditingProduct(null);
-          }}
-        />
-      )}
-
-      {showGalleryForm && (
-        <GalleryForm
-          galleryItem={editingGalleryItem}
-          onSave={handleSaveGalleryItem}
-          onClose={() => {
-            setShowGalleryForm(false);
-            setEditingGalleryItem(null);
           }}
         />
       )}
